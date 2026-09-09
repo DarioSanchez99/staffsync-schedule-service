@@ -1,0 +1,257 @@
+openapi: 3.0.3
+info:
+  title: Schedule Service API
+  description: API for managing work shifts and weekly schedules in StaffSync
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8083
+    description: Local development
+
+tags:
+  - name: shifts
+    description: Shift management operations
+
+paths:
+  /shifts:
+    get:
+      tags:
+        - shifts
+      summary: List all shifts
+      operationId: listShifts
+      parameters:
+        - name: employeeId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of shifts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShiftResponse'
+    post:
+      tags:
+        - shifts
+      summary: Create a new shift
+      operationId: createShift
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShiftRequest'
+      responses:
+        '201':
+          description: Shift created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftResponse'
+        '400':
+          description: Invalid request
+
+  /shifts/{id}:
+    get:
+      tags:
+        - shifts
+      summary: Get shift by ID
+      operationId: getShiftById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Shift found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftResponse'
+        '404':
+          description: Shift not found
+    put:
+      tags:
+        - shifts
+      summary: Update a shift
+      operationId: updateShift
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateShiftRequest'
+      responses:
+        '200':
+          description: Shift updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShiftResponse'
+        '404':
+          description: Shift not found
+    delete:
+      tags:
+        - shifts
+      summary: Delete a shift
+      operationId: deleteShift
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Shift deleted
+        '404':
+          description: Shift not found
+
+  /shifts/employee/{employeeId}:
+    get:
+      tags:
+        - shifts
+      summary: Get all shifts for an employee
+      operationId: getShiftsByEmployee
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of shifts for the employee
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShiftResponse'
+
+  /shifts/week/{weekStart}:
+    get:
+      tags:
+        - shifts
+      summary: Get shifts for a week
+      operationId: getShiftsByWeek
+      parameters:
+        - name: weekStart
+          in: path
+          required: true
+          description: Start date of the week (ISO format YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of shifts for the week
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ShiftResponse'
+
+components:
+  schemas:
+    ShiftType:
+      type: string
+      enum:
+        - MORNING
+        - AFTERNOON
+        - NIGHT
+        - REST
+
+    CreateShiftRequest:
+      type: object
+      required:
+        - employeeId
+        - date
+        - shiftType
+      properties:
+        employeeId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+          example: "08:00:00"
+        endTime:
+          type: string
+          format: time
+          example: "16:00:00"
+        shiftType:
+          $ref: '#/components/schemas/ShiftType'
+        notes:
+          type: string
+          maxLength: 500
+
+    UpdateShiftRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+          example: "08:00:00"
+        endTime:
+          type: string
+          format: time
+          example: "16:00:00"
+        shiftType:
+          $ref: '#/components/schemas/ShiftType'
+        notes:
+          type: string
+          maxLength: 500
+
+    ShiftResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        shiftType:
+          $ref: '#/components/schemas/ShiftType'
+        notes:
+          type: string
