@@ -4,30 +4,37 @@ import com.staffsync.schedule.domain.model.Shift;
 import com.staffsync.schedule.domain.port.out.ScheduleEventPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ScheduleKafkaProducer implements ScheduleEventPort {
 
-    private static final String TOPIC = "schedule-events";
+    private static final String KAFKA_TOPIC = "schedule-events";
+    private static final String RABBITMQ_EXCHANGE = "staffsync.notifications";
 
     private final KafkaTemplate<String, ShiftEvent> kafkaTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
     @Override
     public void publishShiftCreated(Shift shift) {
         ShiftEvent event = buildEvent("SHIFT_CREATED", shift);
-        send(event);
+        sendToKafka(event);
+        sendScheduleNotification("SCHEDULE_PUBLISHED", shift);
     }
 
     @Override
     public void publishShiftUpdated(Shift shift) {
         ShiftEvent event = buildEvent("SHIFT_UPDATED", shift);
-        send(event);
+        sendToKafka(event);
+        sendScheduleNotification("SCHEDULE_UPDATED", shift);
     }
 
     private ShiftEvent buildEvent(String eventType, Shift shift) {
@@ -41,8 +48,8 @@ public class ScheduleKafkaProducer implements ScheduleEventPort {
                 .build();
     }
 
-    private void send(ShiftEvent event) {
-        kafkaTemplate.send(TOPIC, event.getShiftId().toString(), event)
+    private void sendToKafka(ShiftEvent event) {
+        kafkaTemplate.send(KAFKA_TOPIC, event.getShiftId().toString(), event)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
                         log.error("Failed to publish event {}: {}", event.getEventType(), ex.getMessage());
@@ -50,5 +57,22 @@ public class ScheduleKafkaProducer implements ScheduleEventPort {
                         log.debug("Published event {} for shift {}", event.getEventType(), event.getShiftId());
                     }
                 });
+    }
+
+    private void sendScheduleNotification(String type, Shift shift) {
+        try {
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("type", type);
+            notification.put("shiftId", shift.getId().toString());
+            notification.put("employeeIds", java.util.List.of(shift.getEmployeeId().toString()));
+            notification.put("weekStart", shift.getDate() != null ? shift.getDate().toString() : null);
+            notification.put("timestamp", Instant.now().toString());
+
+            String routingKey = "SCHEDULE_PUBLISHED".equals(type) ? "schedule.published" : "schedule.updated";
+            rabbitTemplate.convertAndSend(RABBITMQ_EXCHANGE, routingKey, notification);
+            log.debug("Published schedule notification {} to RabbitMQ", type);
+        } catch (Exception ex) {
+            log.error("Failed to publish schedule notification to RabbitMQ: {}", ex.getMessage());
+        }
     }
 }
