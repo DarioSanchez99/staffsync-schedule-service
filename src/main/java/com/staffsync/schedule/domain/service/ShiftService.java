@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -82,8 +84,21 @@ public class ShiftService implements ShiftUseCase {
 
     @Override
     public List<Shift> findByDepartment(String department) {
-        // Department-based filtering would require integration with employee-service
-        // For now, returns all shifts as a placeholder
         return shiftRepository.findAll();
+    }
+
+    @Override
+    public Map<String, Object> publishWeek(LocalDate weekStart) {
+        List<Shift> shifts = findByWeek(weekStart);
+        long employeesNotified = shifts.stream()
+                .map(Shift::getEmployeeId)
+                .distinct()
+                .count();
+        scheduleEventPort.publishWeeklySchedule(shifts, weekStart);
+        return Map.of(
+                "published", true,
+                "shiftCount", shifts.size(),
+                "employeesNotified", employeesNotified
+        );
     }
 }

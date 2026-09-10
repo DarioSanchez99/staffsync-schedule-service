@@ -24,4 +24,6 @@ public interface ShiftUseCase {
     List<Shift> findByWeek(LocalDate weekStart);
 
     List<Shift> findByDepartment(String department);
+
+    java.util.Map<String, Object> publishWeek(LocalDate weekStart);
 }

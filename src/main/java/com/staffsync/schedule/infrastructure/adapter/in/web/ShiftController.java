@@ -10,11 +10,14 @@ import com.staffsync.schedule.infrastructure.adapter.in.web.dto.UpdateShiftReque
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -76,6 +79,13 @@ public class ShiftController implements ShiftsApi {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responses);
+    }
+
+    @PostMapping("/shifts/publish-week")
+    public ResponseEntity<Map<String, Object>> publishWeek(@RequestBody Map<String, String> body) {
+        LocalDate weekStart = LocalDate.parse(body.get("weekStart"));
+        Map<String, Object> result = shiftUseCase.publishWeek(weekStart);
+        return ResponseEntity.ok(result);
     }
 
     private Shift toDomain(CreateShiftRequest request) {

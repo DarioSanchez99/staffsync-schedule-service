@@ -9,8 +9,12 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -64,7 +68,7 @@ public class ScheduleKafkaProducer implements ScheduleEventPort {
             Map<String, Object> notification = new HashMap<>();
             notification.put("type", type);
             notification.put("shiftId", shift.getId().toString());
-            notification.put("employeeIds", java.util.List.of(shift.getEmployeeId().toString()));
+            notification.put("employeeIds", List.of(shift.getEmployeeId().toString()));
             notification.put("weekStart", shift.getDate() != null ? shift.getDate().toString() : null);
             notification.put("timestamp", Instant.now().toString());
 
@@ -73,6 +77,28 @@ public class ScheduleKafkaProducer implements ScheduleEventPort {
             log.debug("Published schedule notification {} to RabbitMQ", type);
         } catch (Exception ex) {
             log.error("Failed to publish schedule notification to RabbitMQ: {}", ex.getMessage());
+        }
+    }
+
+    @Override
+    public void publishWeeklySchedule(List<Shift> shifts, LocalDate weekStart) {
+        try {
+            List<String> uniqueEmployeeIds = shifts.stream()
+                    .map(s -> s.getEmployeeId().toString())
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("type", "SCHEDULE_WEEK_PUBLISHED");
+            notification.put("weekStart", weekStart.toString());
+            notification.put("employeeIds", uniqueEmployeeIds);
+            notification.put("shiftCount", shifts.size());
+            notification.put("timestamp", Instant.now().toString());
+
+            rabbitTemplate.convertAndSend(RABBITMQ_EXCHANGE, "schedule.week.published", notification);
+            log.info("Published weekly schedule for {} employees, {} shifts", uniqueEmployeeIds.size(), shifts.size());
+        } catch (Exception ex) {
+            log.error("Failed to publish weekly schedule notification: {}", ex.getMessage());
         }
     }
 }
