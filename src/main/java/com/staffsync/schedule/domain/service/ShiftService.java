@@ -24,6 +24,12 @@ public class ShiftService implements ShiftUseCase {
 
     @Override
     public Shift createShift(Shift shift) {
+        if (shift.getEmployeeId() != null && shift.getDate() != null) {
+            List<Shift> conflicts = shiftRepository.findByEmployeeIdAndDate(shift.getEmployeeId(), shift.getDate());
+            if (!conflicts.isEmpty()) {
+                throw new IllegalStateException("Employee already has a shift on " + shift.getDate());
+            }
+        }
         shift.setId(UUID.randomUUID());
         Shift saved = shiftRepository.save(shift);
         scheduleEventPort.publishShiftCreated(saved);

@@ -20,4 +20,6 @@ public interface ShiftRepository {
     List<Shift> findByDateBetween(LocalDate startDate, LocalDate endDate);
 
     void deleteById(UUID id);
+
+    List<Shift> findByEmployeeIdAndDate(UUID employeeId, LocalDate date);
 }

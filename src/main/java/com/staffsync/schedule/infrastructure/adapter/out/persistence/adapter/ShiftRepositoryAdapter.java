@@ -58,4 +58,11 @@ public class ShiftRepositoryAdapter implements ShiftRepository {
     public void deleteById(UUID id) {
         jpaRepository.deleteById(id);
     }
+
+    @Override
+    public List<Shift> findByEmployeeIdAndDate(UUID employeeId, LocalDate date) {
+        return jpaRepository.findByEmployeeIdAndDate(employeeId, date).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }
