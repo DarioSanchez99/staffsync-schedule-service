@@ -12,7 +12,11 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "shifts")
+@Table(name = "shifts", indexes = {
+        @Index(name = "idx_shift_employee_date", columnList = "employee_id, date"),
+        @Index(name = "idx_shift_date", columnList = "date"),
+        @Index(name = "idx_shift_department", columnList = "department")
+})
 @Data
 @Builder
 @NoArgsConstructor
@@ -41,4 +45,7 @@ public class ShiftEntity {
 
     @Column(length = 500)
     private String notes;
+
+    @Column(length = 100)
+    private String department;
 }
