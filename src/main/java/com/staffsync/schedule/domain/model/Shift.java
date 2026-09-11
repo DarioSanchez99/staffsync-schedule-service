@@ -22,4 +22,5 @@ public class Shift {
     private LocalTime endTime;
     private ShiftType shiftType;
     private String notes;
+    private String department;
 }

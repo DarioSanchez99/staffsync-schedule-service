@@ -65,4 +65,11 @@ public class ShiftRepositoryAdapter implements ShiftRepository {
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Shift> findByDepartment(String department) {
+        return jpaRepository.findByDepartment(department).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }

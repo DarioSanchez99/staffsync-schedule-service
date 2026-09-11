@@ -212,6 +212,9 @@ components:
         notes:
           type: string
           maxLength: 500
+        department:
+          type: string
+          maxLength: 100
 
     UpdateShiftRequest:
       type: object
@@ -254,4 +257,6 @@ components:
         shiftType:
           $ref: '#/components/schemas/ShiftType'
         notes:
+          type: string
+        department:
           type: string

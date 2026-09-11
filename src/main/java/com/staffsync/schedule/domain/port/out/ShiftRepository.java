@@ -22,4 +22,6 @@ public interface ShiftRepository {
     void deleteById(UUID id);
 
     List<Shift> findByEmployeeIdAndDate(UUID employeeId, LocalDate date);
+
+    List<Shift> findByDepartment(String department);
 }

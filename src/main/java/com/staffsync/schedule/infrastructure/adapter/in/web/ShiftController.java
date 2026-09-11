@@ -97,6 +97,7 @@ public class ShiftController implements ShiftsApi {
                 .shiftType(request.getShiftType() != null
                         ? ShiftType.valueOf(request.getShiftType().name()) : null)
                 .notes(request.getNotes())
+                .department(request.getDepartment() != null ? request.getDepartment().toUpperCase() : null)
                 .build();
     }
 
@@ -123,6 +124,7 @@ public class ShiftController implements ShiftsApi {
                     .valueOf(shift.getShiftType().name()));
         }
         response.setNotes(shift.getNotes());
+        response.setDepartment(shift.getDepartment());
         return response;
     }
 }

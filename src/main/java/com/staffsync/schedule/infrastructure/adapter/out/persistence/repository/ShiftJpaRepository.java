@@ -16,4 +16,8 @@ public interface ShiftJpaRepository extends JpaRepository<ShiftEntity, UUID> {
     List<ShiftEntity> findByDateBetween(LocalDate startDate, LocalDate endDate);
 
     List<ShiftEntity> findByEmployeeIdAndDate(UUID employeeId, LocalDate date);
+
+    List<ShiftEntity> findByDepartment(String department);
+
+    List<ShiftEntity> findByDepartmentAndDateBetween(String department, LocalDate startDate, LocalDate endDate);
 }

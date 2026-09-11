@@ -90,7 +90,10 @@ public class ShiftService implements ShiftUseCase {
 
     @Override
     public List<Shift> findByDepartment(String department) {
-        return shiftRepository.findAll();
+        if (department == null || department.isBlank()) {
+            return shiftRepository.findAll();
+        }
+        return shiftRepository.findByDepartment(department.toUpperCase());
     }
 
     @Override
